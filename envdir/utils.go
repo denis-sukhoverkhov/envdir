@@ -1,9 +1,13 @@
 package envdir
 
 import (
+	"bytes"
 	"io/ioutil"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 func ReadDir(pathToDir string) (map[string]string, error) {
@@ -33,4 +37,22 @@ func ReadDir(pathToDir string) (map[string]string, error) {
 	}
 
 	return envVars, nil
+}
+
+func RunCmd(cmd []string, env map[string]string) (string, int) {
+	for key, val := range env {
+		err := os.Setenv(key, val)
+		if err != nil {
+			return "", 1
+		}
+	}
+
+	cmdStruct := exec.Command(cmd[0], cmd[1:]...)
+	var out bytes.Buffer
+	cmdStruct.Stdout = &out
+	err := cmdStruct.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return strings.TrimSpace(out.String()), 0
 }
